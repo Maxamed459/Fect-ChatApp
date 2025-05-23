@@ -1,6 +1,6 @@
 # Fect-Chat
 
-![Chat UI](./client/src/assets/chat%20app.jpg)
+![Chat UI](./client/src/assets/chat%20app.png)
 
 Fect-Chat is a modern, full-stack chat application built with the MERN stack (MongoDB, Express.js, React, Node.js). It offers real-time messaging capabilities, user authentication, and a sleek, responsive design.
 
