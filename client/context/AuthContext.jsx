@@ -9,15 +9,14 @@ axios.defaults.baseURL = backendUrl;
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {  // lowercase 'children'
+export const AuthProvider = ({ children }) => {
+  const [authLoading, setAuthLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [authUser, setAuthUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [socket, setSocket] = useState(null);
 
-  
-
-  // Login function to handle user authentication and socket connection
+  /// Login function to handle user authentication and socket connection
   const login = async (state, credentials) => {
     try {
       const { data } = await axios.post(`/api/auth/${state}`, credentials);
@@ -26,7 +25,7 @@ export const AuthProvider = ({ children }) => {  // lowercase 'children'
         axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
         localStorage.setItem("token", data.token);
         setToken(data.token);
-        
+
         setAuthUser(data.userData);
         connectSocket(data.userData);
 
@@ -50,6 +49,8 @@ export const AuthProvider = ({ children }) => {  // lowercase 'children'
     } catch (error) {
       console.log(error.message);
       toast.error(error.response?.data?.message || error.message);
+    } finally {
+      setAuthLoading(false); // ✅ important
     }
   };
 
@@ -65,14 +66,15 @@ export const AuthProvider = ({ children }) => {  // lowercase 'children'
   };
 
   // update profile function to handle user profile updates
+
   const updateProfile = async (body) => {
     try {
       const formData = new FormData();
-      
+
       // Add text fields
       formData.append("fullName", body.fullName);
       formData.append("bio", body.bio);
-      
+
       // Add image if present
       if (body.profilePic) {
         // Convert base64 to blob
@@ -86,7 +88,7 @@ export const AuthProvider = ({ children }) => {  // lowercase 'children'
           "Content-Type": "multipart/form-data",
         },
       });
-      
+
       if (data.success) {
         setAuthUser(data.user);
         toast.success("Profile updated successfully");
@@ -114,17 +116,12 @@ export const AuthProvider = ({ children }) => {  // lowercase 'children'
 
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common["token"] = token;
-      checkAuth();
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common["Authorization"];
     }
-    
-    // Cleanup function for socket
-    return () => {
-      if (socket) {
-        socket.disconnect();
-      }
-    };
-  }, [token]);  // added token as dependency
+    checkAuth();
+  }, []);
 
   const value = {
     axios,
@@ -134,7 +131,7 @@ export const AuthProvider = ({ children }) => {  // lowercase 'children'
     login,
     logout,
     updateProfile,
+    authLoading,
   };
-  
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;  // fixed to use AuthContext.Provider
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -10,9 +10,6 @@ export const protectRoute = async (req, res, next) => {
     const authHeader = req.headers.authorization; // should be: 'Bearer <jwt>'
     const token = authHeader && authHeader.split(" ")[1]; // token is undefined if header missing
 
-    // console.log("Auth header:", req.headers.authorization);
-    // console.log("Extracted token:", token);
-
     /** 2. FAIL EARLY if token missing **/
     if (!token) {
       return res
@@ -25,9 +22,11 @@ export const protectRoute = async (req, res, next) => {
     const user = await User.findById(decoded.userId).select("-password");
 
     if (!user) {
-      return res.status(401).json({ success: false, message: "User not found" });
+      return res
+        .status(401)
+        .json({ success: false, message: "User not found" });
     }
-    
+
     req.user = user;
     next();
   } catch (error) {

@@ -23,7 +23,7 @@ export const getUsersForSidebar = async (req, res) => {
         unseenMessages[user._id] = messages.length;
       }
     });
-    await Promises.all(Promises);
+    await Promise.all(Promises);
     res.json({ success: true, users: filterUsers, unseenMessages });
   } catch (error) {
     console.log(error.message);
@@ -77,7 +77,7 @@ export const sendMessage = async (req, res) => {
   try {
     const { text, image } = req.body;
 
-    const reciverId = req.params.id;
+    const receiverId = req.params.id;
     const senderId = req.user._id;
 
     let imageUrl;
@@ -85,19 +85,22 @@ export const sendMessage = async (req, res) => {
       const uploadResponse = await cloudinary.uploader.upload(image);
       imageUrl = uploadResponse.secure_url;
     }
-    const newMessage = Message.create({
+    const newMessage = await Message.create({
       senderId,
-      reciverId,
+      reciverId: receiverId,
       text,
       image: imageUrl,
     });
 
     // Emit the new message to the receiver's socket
-    const receiverSocketId = userSocketMap[reciverId];
+    const receiverSocketId = userSocketMap[receiverId];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
     }
 
     res.json({ success: true, newMessage });
-  } catch (error) {}
+  } catch (error) {
+    console.error("Error sending message:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };

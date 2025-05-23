@@ -1,12 +1,32 @@
-import React, { useContext } from "react";
-import assets, { userDummyData } from "../assets/assets";
+import React, { useContext, useEffect, useState } from "react";
+import assets from "../assets/assets";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext } from "../../context/AuthContext.jsx";
+import { ChatContext } from "../../context/ChatContext.jsx";
 
-const Sidebar = ({ selectedUser, setselectedUser }) => {
+const Sidebar = () => {
+  const {
+    getUsers,
+    users,
+    selectedUser,
+    setSelectedUser,
+    unseenMessages,
+    setUnseenMessages,
+  } = useContext(ChatContext);
   const navigate = useNavigate();
 
-  const { logout } = useContext(AuthContext);
+  const [input, setInput] = useState(false);
+
+  const { logout, onlineUsers } = useContext(AuthContext);
+
+  const filterUsers = input
+    ? users.filter((user) =>
+        user.fullName.toLowerCase().includes(input.toLowerCase())
+      )
+    : users;
+  useEffect(() => {
+    getUsers();
+  }, [onlineUsers]);
 
   return (
     <div
@@ -36,7 +56,6 @@ group-hover:block"
               </p>
               <hr className="my-2 border-t border-gray-500" />
               <p className="cursor-pointer text-sm" onClick={() => logout()}>
-              
                 Logout
               </p>
             </div>
@@ -49,15 +68,17 @@ group-hover:block"
             type="text"
             className="bg-transparent border-none outline-none text-white text-xs placeholder-[#c8c8c8] flex-1"
             placeholder="Search User"
+            onChange={(e) => setInput(e.target.value)}
           />
         </div>
       </div>
 
       <div className="flex flex-col">
-        {userDummyData.map((user, index) => (
+        {filterUsers.map((user, index) => (
           <div
             onClick={() => {
-              setselectedUser(user);
+              setSelectedUser(user);
+              setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 }));
             }}
             key={index}
             className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${
@@ -71,15 +92,15 @@ group-hover:block"
             />
             <div className="flex flex-col leading-5">
               <p className="text-slate-800">{user.fullName}</p>
-              {index < 3 ? (
+              {onlineUsers.includes(user._id) ? (
                 <span className="text-green-400 text-xs">Online</span>
               ) : (
                 <span className="text-red-400 text-xs">Offline</span>
               )}
             </div>
-            {index > 2 && (
+            {unseenMessages[user._id] > 0 && (
               <p className="absolute top-4 right-4 text-xs text-[#000b58] h-5 w-5 flex justify-center items-center rounded-full bg-[#ffdb59]/80">
-                {index}
+                {unseenMessages[user._id]}
               </p>
             )}
           </div>
