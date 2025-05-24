@@ -17,6 +17,7 @@ const Sidebar = () => {
 
   const [input, setInput] = useState(false);
 
+  const { authUser } = useContext(AuthContext);
   const { logout, onlineUsers } = useContext(AuthContext);
 
   const filterUsers = input
@@ -30,7 +31,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`bg-[#000b58]/10 h-full p-5 overflow-y-scroll text-white ${
+      className={`bg-[#000b58]/10 h-full p-5 overflow-y-scroll text-white relative ${
         selectedUser ? "max-md:hidden" : ""
       }`}
     >
@@ -39,9 +40,9 @@ const Sidebar = () => {
           <img src={assets.logo} alt="logo" className="max-w-40" />
           <div className="relative py-2 group">
             <img
-              src={assets.menu_icon}
+              src={authUser.profilePic || assets.avatar_icon}
               alt="menu"
-              className="max-w-5 cursor-pointer"
+              className="max-w-10 rounded-full cursor-pointer"
             />
             <div
               className="absolute top-full right-0 z-20 w-32 p-5 rounded-md 

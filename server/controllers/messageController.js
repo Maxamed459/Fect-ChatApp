@@ -4,34 +4,85 @@ import Message from "../models/message.js";
 import { io, userSocketMap } from "../server.js";
 import User from "../models/User.js";
 
+// export const getUsersForSidebar = async (req, res) => {
+//   try {
+//     const userId = req.user._id;
+//     const filterUsers = await User.find({ _id: { $ne: userId } }).select(
+//       "-password"
+//     );
+
+//     // Count numbers of messages not seen
+//     const unseenMessages = {};
+//     const Promises = filterUsers.map(async (user) => {
+//       const messages = await Message.find({
+//         senderId: user._id,
+//         reciverId: userId,
+//         seen: false,
+//       });
+//       if (messages.length > 0) {
+//         unseenMessages[user._id] = messages.length;
+//       }
+//     });
+//     await Promise.all(Promises);
+//     res.json({ success: true, users: filterUsers, unseenMessages });
+//   } catch (error) {
+//     console.log(error.message);
+//     res.json({ success: false, message: error.message });
+//   }
+// };
+
+// Get all messages for selcted users
+
 export const getUsersForSidebar = async (req, res) => {
   try {
     const userId = req.user._id;
+
     const filterUsers = await User.find({ _id: { $ne: userId } }).select(
       "-password"
     );
 
-    // Count numbers of messages not seen
     const unseenMessages = {};
-    const Promises = filterUsers.map(async (user) => {
-      const messages = await Message.find({
+    const userWithLastMessage = [];
+
+    const promises = filterUsers.map(async (user) => {
+      // Count unseen messages
+      const unseen = await Message.countDocuments({
         senderId: user._id,
         reciverId: userId,
         seen: false,
       });
-      if (messages.length > 0) {
-        unseenMessages[user._id] = messages.length;
+      if (unseen > 0) {
+        unseenMessages[user._id] = unseen;
       }
+
+      // Find the last message between the two users (sent or received)
+      const lastMessage = await Message.findOne({
+        $or: [
+          { senderId: userId, reciverId: user._id },
+          { senderId: user._id, reciverId: userId },
+        ],
+      }).sort({ createdAt: -1 });
+
+      userWithLastMessage.push({
+        ...user.toObject(),
+        lastMessageAt: lastMessage ? lastMessage.createdAt : new Date(0), // fallback to epoch if no messages
+      });
     });
-    await Promise.all(Promises);
-    res.json({ success: true, users: filterUsers, unseenMessages });
+
+    await Promise.all(promises);
+
+    // Sort by lastMessageAt (most recent first)
+    userWithLastMessage.sort(
+      (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
+    );
+
+    res.json({ success: true, users: userWithLastMessage, unseenMessages });
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, message: error.message });
   }
 };
 
-// Get all messages for selcted users
 export const getMessages = async (req, res) => {
   try {
     const { id: selectedUserId } = req.params;
