@@ -42,7 +42,7 @@ const Sidebar = () => {
             <img
               src={authUser.profilePic || assets.avatar_icon}
               alt="menu"
-              className="max-w-10 rounded-full cursor-pointer"
+              className="w-10 h-10 rounded-full cursor-pointer"
             />
             <div
               className="absolute top-full right-0 z-20 w-32 p-5 rounded-md 
