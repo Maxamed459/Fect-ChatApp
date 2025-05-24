@@ -14,6 +14,8 @@ const Sidebar = () => {
     setUnseenMessages,
   } = useContext(ChatContext);
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const [input, setInput] = useState(false);
 
@@ -29,6 +31,16 @@ const Sidebar = () => {
     getUsers();
   }, [onlineUsers]);
 
+  // Detect mobile or desktop screen
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsMobile(window.innerWidth < 768); // Tailwind md breakpoint
+    };
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
+
   return (
     <div
       className={`bg-[#000b58]/10 h-full p-5 overflow-y-scroll text-white relative ${
@@ -38,16 +50,28 @@ const Sidebar = () => {
       <div className="pb-5">
         <div className="flex justify-between items-center">
           <img src={assets.logo} alt="logo" className="max-w-40" />
-          <div className="relative py-2 group">
+
+          <div
+            className={`relative py-2 ${isMobile ? "" : "group"}`}
+            onClick={() => isMobile && setMenuOpen((prev) => !prev)}
+          >
             <img
               src={authUser.profilePic || assets.avatar_icon}
               alt="menu"
               className="w-10 h-10 rounded-full cursor-pointer"
             />
+
             <div
-              className="absolute top-full right-0 z-20 w-32 p-5 rounded-md 
-bg-[#282142] border border-gray-600 text-gray-100 hidden 
-group-hover:block"
+              className={`absolute top-full right-0 z-20 w-32 p-5 rounded-md
+          bg-[#282142] border border-gray-600 text-gray-100 transition-all
+          ${
+            isMobile
+              ? menuOpen
+                ? "block"
+                : "hidden"
+              : "hidden group-hover:block"
+          }
+          `}
             >
               <p
                 onClick={() => navigate("/profile")}
@@ -56,7 +80,7 @@ group-hover:block"
                 Edit Profile
               </p>
               <hr className="my-2 border-t border-gray-500" />
-              <p className="cursor-pointer text-sm" onClick={() => logout()}>
+              <p className="cursor-pointer text-sm" onClick={logout}>
                 Logout
               </p>
             </div>

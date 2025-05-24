@@ -6,7 +6,7 @@ import { AuthContext } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 
 const ChatContainer = () => {
-  const { messages, selectedUser, setselectedUser, sendMessage, getMessages } =
+  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
     useContext(ChatContext);
   const { authUser, onlineUsers } = useContext(AuthContext);
 
@@ -86,7 +86,7 @@ const ChatContainer = () => {
         </p>
 
         <img
-          onClick={() => setselectedUser(null)}
+          onClick={() => setSelectedUser(null)}
           src={assets.arrow_icon}
           alt=""
           className="md:hidden max-w-7"
